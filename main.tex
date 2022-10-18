@@ -1,0 +1,247 @@
+\documentclass[10pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{xeCJK}
+\usepackage{graphicx}
+\usepackage {mathtools}
+\usepackage{utopia} 
+\usepackage{listings}
+\usetheme{CambridgeUS}
+\usecolortheme{dolphin}
+\usepackage[UKenglish]{isodate}
+
+%rust colors https://www.reddit.com/r/rust/comments/f7ocdx/rust_the_bookstyle_syntax_highlighting_for_latex/
+\usepackage{color}
+\usepackage{listings}
+\definecolor{GrayCodeBlock}{RGB}{241,241,241}
+\definecolor{BlackText}{RGB}{110,107,94}
+\definecolor{RedTypename}{RGB}{182,86,17}
+\definecolor{GreenString}{RGB}{96,172,57}
+\definecolor{PurpleKeyword}{RGB}{184,84,212}
+\definecolor{GrayComment}{RGB}{170,170,170}
+\definecolor{GoldDocumentation}{RGB}{180,165,45}
+\lstdefinelanguage{rust}
+{
+    columns=fullflexible,
+    keepspaces=true,
+    %backgroundcolor=\color{GrayCodeBlock},
+    basicstyle=\ttfamily\color{BlackText},
+    keywords={
+        true,false,
+        unsafe,async,await,move,
+        use,pub,crate,super,self,mod,
+        struct,enum,fn,const,static,let,mut,ref,type,impl,dyn,trait,where,as,
+        break,continue,if,else,while,for,loop,match,return,yield,in
+    },
+    keywordstyle=\color{PurpleKeyword},
+    ndkeywords={
+        bool,u8,u16,u32,u64,u128,i8,i16,i32,i64,i128,char,str,
+        Self,Option,Some,None,Result,Ok,Err,String,Box,Vec,Rc,Arc,Cell,RefCell,HashMap,BTreeMap,
+        macro_rules
+    },
+    ndkeywordstyle=\color{RedTypename},
+    comment=[l][\color{GrayComment}\slshape]{//},
+    morecomment=[s][\color{GrayComment}\slshape]{/*}{*/},
+    morecomment=[l][\color{GoldDocumentation}\slshape]{///},
+    morecomment=[s][\color{GoldDocumentation}\slshape]{/*!}{*/},
+    morecomment=[l][\color{GoldDocumentation}\slshape]{//!},
+    morecomment=[s][\color{RedTypename}]{\#![}{]},
+    morecomment=[s][\color{RedTypename}]{\#[}{]},
+    stringstyle=\color{GreenString},
+    string=[b]"
+}
+
+\lstset{language=C++,
+                basicstyle=\ttfamily,
+                keywordstyle=\color{blue}\ttfamily,
+                stringstyle=\color{red}\ttfamily,
+                commentstyle=\color{green}\ttfamily,
+                %backgroundcolor=\color{GrayCodeBlock},
+                morecomment=[l][\color{magenta}]{\#}
+}
+
+
+\definecolor{myNewColorA}{RGB}{0, 57, 93}%https://www.designpieces.com/palette/barclays-color-palette-hex-and-rgb/
+\definecolor{myNewColorB}{RGB}{0, 57, 93}
+\definecolor{myNewColorC}{RGB}{0, 57, 93}
+\setbeamercolor*{palette primary}{bg=myNewColorC}
+\setbeamercolor*{palette secondary}{bg=myNewColorB, fg = white}
+\setbeamercolor*{palette tertiary}{bg=myNewColorA, fg = white}
+\setbeamercolor*{titlelike}{fg=myNewColorA}
+\setbeamercolor*{title}{bg=myNewColorA, fg = white}
+\setbeamercolor*{item}{fg=myNewColorA}
+\setbeamercolor*{caption name}{fg=myNewColorA}
+\usefonttheme{professionalfonts}
+\usepackage{natbib}
+\usepackage{hyperref}
+%------------------------------------------------------------
+\titlegraphic{\includegraphics[height=1.5cm]{logo.png}} 
+
+\setbeamerfont{title}{size=\large}
+\setbeamerfont{subtitle}{size=\small}
+\setbeamerfont{author}{size=\small}
+\setbeamerfont{date}{size=\small}
+\setbeamerfont{institute}{size=\small}
+\title[Barclays]{Comparison of Rust and other programming languages}
+
+\author[author]{author}
+
+\institute[Barclays]{department?}
+\date[\textcolor{white}{\today} ]
+{\today}
+
+
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}
+\frametitle{Contents}
+\tableofcontents
+
+\end{frame}
+
+\section{Introduction}
+    \begin{frame}{About Rust}
+	    \begin{itemize}
+	        \item introduced in 2010
+	        \item compiler guaranties memory, thread and type safety by default (can be violated with \texttt{unsafe\{\}} block)
+	        \item Haskell inspired polymorphism
+	        \item memory is freed automatically without garbage collector 
+	        \item no concept of Null pointer, \texttt{Option} type instead (similar to \texttt{std::optional} and \texttt{Optional<T>})
+	        \item Will be added to Linux kernel $6.1$
+	        \item used in Mozilla Firefox
+	    \end{itemize}
+	    
+	
+    \end{frame}
+    
+    \begin{frame}[fragile]{Code example}
+        \begin{lstlisting}[language=rust, caption={Example program from The Rust Programming Language}]
+    //returns reference to longer string
+    fn longest<'a>(x: &'a str, y: &'a str) -> &'a str
+    //         ^       ^           ^           ^
+    //         lifetime annotations
+    {
+        if x.len() > y.len() {
+            x //return is optional
+        } else {
+            y //return is optional
+        }
+    }
+        \end{lstlisting}
+    \end{frame}
+
+\section{Comparison with other languages}
+
+\begin{frame}[fragile]{Memory safety}
+	\begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{lstlisting}[language=c++]
+#include <string>
+#include <iostream>
+int main(){
+    std::string *s  = 
+        new std::string
+            ("Hello world!");
+    delete s;
+    std::cout << s << '\n';
+    return 0;
+}
+            \end{lstlisting}
+        \end{column}
+        
+        \vrule{}
+        \begin{column}{0.5\textwidth}
+            \begin{lstlisting}[language=rust]
+use std::mem::drop; 
+
+fn main() {
+    let s = "Hello world!"
+                .to_string();
+    drop(s); // explicit "free"
+    println!("{}", x);
+}
+            \end{lstlisting}
+        
+        \end{column}
+    \end{columns}
+    \texttt{let s = "Hello world!".to\_string();\\
+~~~~- move occurs because `s` has type `String`, which does not implement the `Copy` trait\\
+   drop(s); // explicit "free"\\
+~~~~~- value moved here\\
+   println!("{}", s);\\
+~~~~~~~~~~~~ \^{} value borrowed here after move}
+\end{frame}
+
+\begin{frame}[fragile]{Memory safety 2}
+   \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{lstlisting}[language=java]
+class Main {
+ public static void 
+       main(String[ ] args) {
+  int[] numbers = 
+       {10, 20, 30};
+  System.out.
+       println(numbers[3]);
+    }
+}
+            \end{lstlisting}
+        \end{column}
+        
+        \vrule{}
+        \begin{column}{0.5\textwidth}
+            \begin{lstlisting}[language=rust]
+fn main() {
+  let numbers = [10, 20, 30];
+  println!("{}", numbers[3]);
+}
+            \end{lstlisting}
+        
+        \end{column}
+    \end{columns}
+    \texttt{println!("{}", numbers[3]);\\
+   ~~~~~~~~~~~~~\^{}\^{}\^{}\^{}\^{}\^{}\^{}\^{}\^{}\^{} index out of bounds: the length is 3 but the index is 3
+}
+\end{frame}
+
+\begin{frame}[fragile]{Thread safety}
+	\begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{lstlisting}[language=c++]
+            //c++
+            \end{lstlisting}
+        \end{column}
+        
+        \vrule{}
+        \begin{column}{0.5\textwidth}
+            \begin{lstlisting}[language=rust]
+            //rust
+            \end{lstlisting}
+        
+        \end{column}
+    \end{columns}
+    \texttt{rust output}
+\end{frame}
+
+
+\section*{Acknowledgement}  
+
+    \begin{frame}{More Information}
+        \begin{itemize}
+            \item \href{https://doc.rust-lang.org/book/}{The Rust Programming Language - book}
+            \item \href{https://developer.okta.com/blog/2022/03/18/programming-security-and-why-rust}{More about safety of Rust}
+            \item \href{https://blog.mozilla.org/en/mozilla/mozilla-welcomes-the-rust-foundation/}{Mozilla Rust foundation}
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}
+    \textcolor{myNewColorA}{\Huge{\centerline{Thank you!}}}
+    \end{frame}
+
+\end{document}
+
+
+
+
