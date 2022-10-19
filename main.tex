@@ -81,11 +81,11 @@
 \setbeamerfont{author}{size=\small}
 \setbeamerfont{date}{size=\small}
 \setbeamerfont{institute}{size=\small}
-\title[Barclays]{Comparison of Rust and other programming languages}
+\title[Barclays]{Comparison of Rust and Java}
 
-\author[author]{author}
+\author[Tomáš Janecký Michael Vlach]{Tomáš Janecký Michael Vlach}
 
-\institute[Barclays]{department?}
+\institute[Barclays]{BARX FX}
 \date[\textcolor{white}{\today} ]
 {\today}
 
@@ -95,11 +95,6 @@
 
 \frame{\titlepage}
 
-\begin{frame}
-\frametitle{Contents}
-\tableofcontents
-
-\end{frame}
 
 \section{Introduction}
     \begin{frame}{About Rust}
@@ -108,45 +103,38 @@
 	        \item compiler guaranties memory, thread and type safety by default (can be violated with \texttt{unsafe\{\}} block)
 	        \item Haskell inspired polymorphism
 	        \item memory is freed automatically without garbage collector 
-	        \item no concept of Null pointer, \texttt{Option} type instead (similar to \texttt{std::optional} and \texttt{Optional<T>})
-	        \item Will be added to Linux kernel $6.1$
-	        \item used in Mozilla Firefox
+	        \item no concept of Null pointer, \texttt{Option} type instead (similar to \texttt{Optional<T>})
 	    \end{itemize}
 	    
 	
     \end{frame}
-    
-    \begin{frame}[fragile]{Code example}
-        \begin{lstlisting}[language=rust, caption={Example program from The Rust Programming Language}]
-    //returns reference to longer string
-    fn longest<'a>(x: &'a str, y: &'a str) -> &'a str
-    //         ^       ^           ^           ^
-    //         lifetime annotations
-    {
-        if x.len() > y.len() {
-            x //return is optional
-        } else {
-            y //return is optional
-        }
-    }
-        \end{lstlisting}
+    \begin{frame}{Rust users}
+    \begin{itemize}
+        \item Will be added to Linux kernel $6.1$
+	    \item Microsoft Azure (C/C++ deprecated)
+	    \item JP Morgan
+	    \item used in Mozilla Firefox
+	 \end{itemize}
     \end{frame}
 
-\section{Comparison with other languages}
+\section{Comparison with Java}
 
 \begin{frame}[fragile]{Memory safety}
 	\begin{columns}
         \begin{column}{0.5\textwidth}
-            \begin{lstlisting}[language=c++]
-#include <string>
-#include <iostream>
-int main(){
-    std::string *s  = 
-        new std::string
-            ("Hello world!");
-    delete s;
-    std::cout << s << '\n';
-    return 0;
+            \begin{lstlisting}[language=java]
+class Main {
+ public static Integer 
+                f(Integer x){
+        return null;
+ }
+ public static void 
+         main(String[] args){
+  Integer x = 10;
+  x = f(x);
+  System.out.
+    println(x.intValue());
+ }
 }
             \end{lstlisting}
         \end{column}
@@ -154,24 +142,27 @@ int main(){
         \vrule{}
         \begin{column}{0.5\textwidth}
             \begin{lstlisting}[language=rust]
-use std::mem::drop; 
+fn f(x: &mut i32)->Option<i32>{
+  None
+}
 
 fn main() {
-    let s = "Hello world!"
-                .to_string();
-    drop(s); // explicit "free"
-    println!("{}", x);
+  let mut x = 10;
+  x = *f(&mut x);//has to be 
+                 //matched
+  println!("{}", x);
 }
             \end{lstlisting}
         
         \end{column}
     \end{columns}
-    \texttt{let s = "Hello world!".to\_string();\\
-~~~~- move occurs because `s` has type `String`, which does not implement the `Copy` trait\\
-   drop(s); // explicit "free"\\
-~~~~~- value moved here\\
-   println!("{}", s);\\
-~~~~~~~~~~~~ \^{} value borrowed here after move}
+    \begin{verbatim}
+    error[E0614]: type `Option<i32>` cannot be dereferenced
+    --> src/main.rs:7:9
+    
+        x = *f(&mut x);
+            ^^^^^^^^^^
+    \end{verbatim}
 \end{frame}
 
 \begin{frame}[fragile]{Memory safety 2}
@@ -180,7 +171,7 @@ fn main() {
             \begin{lstlisting}[language=java]
 class Main {
  public static void 
-       main(String[ ] args) {
+       main(String[] args){
   int[] numbers = 
        {10, 20, 30};
   System.out.
@@ -209,22 +200,71 @@ fn main() {
 \begin{frame}[fragile]{Thread safety}
 	\begin{columns}
         \begin{column}{0.5\textwidth}
-            \begin{lstlisting}[language=c++]
-            //c++
+            \begin{lstlisting}[language=java]
+class Main {
+ public static void f(
+                 int[] x){
+  for(int i=0 ; i<100 ; i++){
+   x[0] += 1;
+  }
+ }
+ public static void main(
+            String[] args) {
+  int[] x = new int[1];
+  Thread t1 = 
+      new Thread(() -> f(x));
+  Thread t2 = 
+      new Thread(() -> f(x));
+  t1.start();
+  t2.start();
+  try {//join and println...
+
+
             \end{lstlisting}
         \end{column}
         
         \vrule{}
         \begin{column}{0.5\textwidth}
             \begin{lstlisting}[language=rust]
-            //rust
+use std::{thread, cell::RefCell,
+                        rc::Rc};
+fn f(x: Rc<RefCell<i32>>){
+  for _i in 1..100 {
+    *x.borrow_mut() += 1;
+  }
+}
+fn main() {
+ let x = 
+     Rc::new(RefCell::new(0));
+ let t1 = 
+     thread::spawn(||{ f(x)});
+ let t2 = 
+     thread::spawn(||{ f(x)});
+ t1.join().unwrap();
+ t2.join().unwrap();
+ println!("{:?}", x);
+}
             \end{lstlisting}
         
         \end{column}
     \end{columns}
-    \texttt{rust output}
 \end{frame}
 
+\begin{frame}[fragile]{Thread safety cont.}
+\begin{verbatim}
+
+let t1 = thread::spawn(|| { f(x)});
+         ^^^^^^^^^^^^^ -- within this 
+         |
+        `Rc<RefCell<i32>>` cannot be sent between threads safely
+note: required because it's used within this closure
+
+
+     let t1 = thread::spawn(|| { f(x)});
+                            ^^
+note: required by a bound in `spawn`
+\end{verbatim}  
+\end{frame}
 
 \section*{Acknowledgement}  
 
@@ -241,7 +281,3 @@ fn main() {
     \end{frame}
 
 \end{document}
-
-
-
-
